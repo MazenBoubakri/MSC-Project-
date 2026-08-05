@@ -36,7 +36,7 @@ export default function StoriesBar({ onCreate, onOpenUser }: StoriesBarProps) {
         aria-label="Add to your story"
         className="group flex shrink-0 flex-col items-center gap-1"
       >
-        <span className="relative flex size-15 items-center justify-center rounded-full border-2 border-dashed border-line transition group-hover:border-ink-3">
+        <span className="flex size-13 items-center justify-center rounded-full border-2 border-dashed border-line transition group-hover:border-ink-3">
           <span className="flex size-9 items-center justify-center rounded-full bg-accent-soft text-accent transition group-hover:bg-accent-soft">
             <Plus size={16} weight="bold" />
           </span>
@@ -54,11 +54,11 @@ export default function StoriesBar({ onCreate, onOpenUser }: StoriesBarProps) {
             className="group flex shrink-0 flex-col items-center gap-1"
           >
             <span
-              className={`rounded-full p-0.5 transition group-hover:opacity-85 ${
+              className={`flex items-center justify-center rounded-full p-0.5 transition group-hover:opacity-85 ${
                 hasUnseen ? 'bg-gradient-to-tr from-amber-400 via-fuchsia-500 to-accent' : 'bg-line'
               }`}
             >
-              <span className="block rounded-full bg-surface p-0.5">
+              <span className="flex items-center justify-center rounded-full bg-surface p-0.5">
                 <Avatar name={g.user.fullName} color={g.user.avatarColor} src={g.user.avatarUrl} size={44} />
               </span>
             </span>

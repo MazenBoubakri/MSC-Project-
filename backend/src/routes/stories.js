@@ -85,6 +85,16 @@ router.post('/', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   const story = await Story.findOneAndDelete({ _id: req.params.id, owner: req.userId });
   if (!story) throw ApiError.notFound('Story not found');
+
+  const io = getIo();
+  if (io) {
+    for (const id of await friendIds(req.userId)) {
+      if (id !== String(req.userId)) {
+        io.to(userRoom(id)).emit('story:deleted', { storyId: String(story._id), ownerId: String(story.owner) });
+      }
+    }
+  }
+
   res.json({ ok: true });
 });
 

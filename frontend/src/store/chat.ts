@@ -1076,6 +1076,14 @@ export const useChat = create<ChatState>((set, get) => ({
         })),
       }))
     })
+
+    socket.on('story:deleted', (data: { storyId: string }) => {
+      set((s) => ({
+        stories: s.stories
+          .map((g) => ({ ...g, stories: g.stories.filter((st) => st.id !== data.storyId) }))
+          .filter((g) => g.stories.length > 0),
+      }))
+    })
   },
 
   destroySocket: () => {

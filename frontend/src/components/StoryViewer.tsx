@@ -52,10 +52,18 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
     return () => clearInterval(timer)
   }, [paused, story, index, goNext, progress])
 
-  // mark as seen whenever the active story changes
+  // mark as seen whenever the active story changes (not for own stories)
   useEffect(() => {
-    if (story) markStorySeen(story.id)
+    if (story && story.ownerId !== meId) markStorySeen(story.id)
   }, [story?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // clamp the index if stories were removed (e.g. own story deleted)
+  useEffect(() => {
+    if (group && index >= group.stories.length) {
+      setIndex(Math.max(0, group.stories.length - 1))
+      setProgress(0)
+    }
+  }, [group, index])
 
   // keyboard
   useEffect(() => {
@@ -94,6 +102,9 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
     else if (e.clientX > w * 0.7) goNext()
     else setPaused(true)
   }
+
+  // header/nav buttons must not feed the tap detector on the root overlay
+  const stopPointer = (e: React.SyntheticEvent) => e.stopPropagation()
 
   return (
     <div
@@ -135,10 +146,12 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
           <button
             type="button"
             aria-label="Delete story"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation()
               void deleteStory(story.id)
-              if (count <= 1) onClose()
             }}
+            onPointerDown={stopPointer}
+            onPointerUp={stopPointer}
             className="flex size-9 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25"
           >
             <Trash size={17} />
@@ -147,7 +160,12 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
         <button
           type="button"
           aria-label="Close"
-          onClick={onClose}
+          onClick={(e) => {
+            e.stopPropagation()
+            onClose()
+          }}
+          onPointerDown={stopPointer}
+          onPointerUp={stopPointer}
           className="flex size-9 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25"
         >
           <X size={19} />
@@ -176,6 +194,8 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
           e.stopPropagation()
           goPrev()
         }}
+        onPointerDown={stopPointer}
+        onPointerUp={stopPointer}
         className="absolute top-1/2 left-2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
       >
         <CaretLeft size={20} />
@@ -187,6 +207,8 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
           e.stopPropagation()
           goNext()
         }}
+        onPointerDown={stopPointer}
+        onPointerUp={stopPointer}
         className="absolute top-1/2 right-2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
       >
         <CaretRight size={20} />
