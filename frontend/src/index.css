@@ -1,0 +1,284 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* --- Semantic tokens (light / dark) --- */
+:root {
+  --canvas: #fafafa; /* zinc-50 */
+  --surface: #ffffff;
+  --surface-2: #f4f4f5; /* zinc-100 */
+  --ink: #18181b; /* zinc-900 */
+  --ink-2: #52525b; /* zinc-600 */
+  --ink-3: #a1a1aa; /* zinc-400 */
+  --line: #e4e4e7; /* zinc-200 */
+  --accent: #2b5cff;
+  --accent-strong: #1f49e6;
+  --accent-soft: #e8edff;
+  --accent-ink: #ffffff;
+  --bubble-in: #f1f3f7;
+  --bubble-out: #2b5cff;
+  --danger: #ef4444;
+  --ok: #16a34a;
+  --overlay: rgba(9, 9, 11, 0.55);
+}
+
+.dark {
+  --canvas: #09090b; /* zinc-950 */
+  --surface: #18181b; /* zinc-900 */
+  --surface-2: #27272a; /* zinc-800 */
+  --ink: #f4f4f5; /* zinc-100 */
+  --ink-2: #a1a1aa; /* zinc-400 */
+  --ink-3: #71717a; /* zinc-500 */
+  --line: #27272a; /* zinc-800 */
+  --accent: #4f7dff;
+  --accent-strong: #6b92ff;
+  --accent-soft: #1a2a5e;
+  --accent-ink: #ffffff;
+  --bubble-in: #27272a; /* zinc-800 */
+  --bubble-out: #2b5cff;
+  --overlay: rgba(0, 0, 0, 0.6);
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-bubble-in: var(--bubble-in);
+  --color-bubble-out: var(--bubble-out);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --color-overlay: var(--overlay);
+}
+
+@theme {
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'Cascadia Code', monospace;
+  --radius-bubble: 18px;
+  --radius-input: 12px;
+  --radius-pill: 999px;
+}
+
+/* --- Base --- */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+@media (max-width: 639px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 25%, transparent);
+}
+
+/* --- Form fields --- */
+.field {
+  width: 100%;
+  border-radius: var(--radius-input);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.field::placeholder {
+  color: var(--ink-3);
+}
+.field:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+
+/* Thin scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-3) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--ink-3);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* --- Focus + press --- */
+button:focus-visible,
+a:focus-visible,
+[role='switch']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.press {
+  transition: transform 0.15s ease;
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+/* --- Decorative background --- */
+.bg-dots {
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--ink-3) 38%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+}
+
+/* --- Motion --- */
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-msg-in {
+  animation: msg-in 0.18s ease-out backwards;
+}
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out both;
+}
+.animate-sheet-up {
+  animation: sheet-up 0.22s ease-out both;
+}
+.typing-dot {
+  animation: typing-dot 1.1s infinite;
+}
+
+/* --- Conversation wallpaper patterns (CSS-only, theme-adaptive) --- */
+.chat-bg {
+  background-color: var(--canvas);
+}
+.wp-dots {
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 11%, transparent) 1px, transparent 1.6px);
+  background-size: 22px 22px;
+}
+.wp-lines {
+  background-image: repeating-linear-gradient(
+    45deg,
+    color-mix(in oklab, var(--ink) 6%, transparent) 0,
+    color-mix(in oklab, var(--ink) 6%, transparent) 1px,
+    transparent 1px,
+    transparent 26px
+  );
+}
+.wp-grid {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--ink) 7%, transparent) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+.wp-ripples {
+  background-image: repeating-radial-gradient(
+    ellipse at 50% 50%,
+    color-mix(in oklab, var(--ink) 7%, transparent) 0,
+    color-mix(in oklab, var(--ink) 7%, transparent) 1.5px,
+    transparent 2px,
+    transparent 44px
+  );
+}
+.wp-bubbles {
+  background-image:
+    radial-gradient(circle at 18% 22%, color-mix(in oklab, var(--ink) 10%, transparent) 2.5px, transparent 3.5px),
+    radial-gradient(circle at 72% 58%, color-mix(in oklab, var(--ink) 8%, transparent) 3px, transparent 4px),
+    radial-gradient(circle at 40% 88%, color-mix(in oklab, var(--ink) 9%, transparent) 2px, transparent 3px);
+  background-size: 96px 96px;
+}
+
+/* Floating day-divider pill, readable over any wallpaper */
+.day-divider {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: color-mix(in oklab, var(--surface) 85%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px color-mix(in oklab, var(--ink) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--line) 80%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "changelists": [
+    {
+      "name": "Default",
+      "files": [
+        ".vscode/changelists.json",
+        "frontend/.example.env",
+        "backend/.env.example"
+      ]
+    }
+  ],
+  "active": "Default"
+}
