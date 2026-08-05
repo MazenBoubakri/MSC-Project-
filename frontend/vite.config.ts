@@ -13,4 +13,7 @@ export default defineConfig({
       '/socket.io': { target: 'http://localhost:5000', ws: true },
     },
   },
+  preview: {
+    allowedHosts: ['msc-project-1-txzz.onrender.com'],
+  },
 })
