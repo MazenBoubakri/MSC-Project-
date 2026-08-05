@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node --watch --env-file-if-exists=.env src/index.js",
     "start": "node --env-file-if-exists=.env src/index.js",
-    "build": "node scripts/build.mjs"
+    "build": "npm install && node scripts/build.mjs"
   },
   "engines": {
     "node": ">=22"
