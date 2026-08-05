@@ -129,3 +129,19 @@ export interface RoomDetail extends Room {
   memberIds: string[]
   members: (PublicUser & { online: boolean })[]
 }
+
+export interface Story {
+  id: string
+  ownerId: string
+  mediaUrl: string
+  mediaType: 'image'
+  caption: string
+  createdAt: string
+  viewed: boolean
+  viewCount: number
+}
+
+export interface StoryGroup {
+  user: PublicUser
+  stories: Story[]
+}

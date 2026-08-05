@@ -17,6 +17,9 @@ import {
 import Avatar from './Avatar'
 import EmptyState from './EmptyState'
 import NewRoomModal from './NewRoomModal'
+import StoriesBar from './StoriesBar'
+import CreateStoryModal from './CreateStoryModal'
+import StoryViewer from './StoryViewer'
 import { SidebarListSkeleton } from './Skeletons'
 import { useAuth } from '../store/auth'
 import { useChat } from '../store/chat'
@@ -29,6 +32,8 @@ export default function Sidebar() {
   const [tab, setTab] = useState<Tab>('chats')
   const [searchOpen, setSearchOpen] = useState(false)
   const [roomModalOpen, setRoomModalOpen] = useState(false)
+  const [storyViewerId, setStoryViewerId] = useState<string | null>(null)
+  const [storyCreateOpen, setStoryCreateOpen] = useState(false)
 
   const user = useAuth((s) => s.user)
   const navigate = useNavigate()
@@ -102,6 +107,9 @@ export default function Sidebar() {
           Find people…
         </button>
       </div>
+
+      {/* stories */}
+      <StoriesBar onCreate={() => setStoryCreateOpen(true)} onOpenUser={setStoryViewerId} />
 
       {/* tabs */}
       <div className="flex gap-1.5 px-3 pb-2.5 lg:gap-2 lg:px-4">
@@ -236,6 +244,8 @@ export default function Sidebar() {
 
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
       <NewRoomModal open={roomModalOpen} onClose={() => setRoomModalOpen(false)} />
+      <CreateStoryModal open={storyCreateOpen} onClose={() => setStoryCreateOpen(false)} />
+      {storyViewerId && <StoryViewer ownerId={storyViewerId} onClose={() => setStoryViewerId(null)} />}
     </div>
   )
 }

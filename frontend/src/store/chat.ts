@@ -14,6 +14,8 @@ import type {
   Room,
   RoomDetail,
   SearchResult,
+  Story,
+  StoryGroup,
   UserProfile,
 } from '../lib/types'
 
@@ -57,6 +59,7 @@ interface ChatState {
   friendsTotal: number
   friendsOnline: number
   incoming: FriendRequestDTO[]
+  stories: StoryGroup[]
   toasts: Toast[]
   peers: Record<string, PublicUser>
 
@@ -115,6 +118,11 @@ interface ChatState {
   unblockUser: (userId: string) => Promise<void>
   loadFriends: () => Promise<void>
 
+  loadStories: () => Promise<void>
+  createStory: (mediaUrl: string, caption: string) => Promise<Story | null>
+  deleteStory: (storyId: string) => Promise<void>
+  markStorySeen: (storyId: string) => void
+
   pushToast: (t: Omit<Toast, 'id'>) => void
   dismissToast: (id: string) => void
 }
@@ -148,6 +156,7 @@ export const useChat = create<ChatState>((set, get) => ({
   friendsTotal: 0,
   friendsOnline: 0,
   incoming: [],
+  stories: [],
   toasts: [],
   peers: {},
 
@@ -168,6 +177,7 @@ export const useChat = create<ChatState>((set, get) => ({
       friendsTotal: 0,
       friendsOnline: 0,
       incoming: [],
+      stories: [],
       toasts: [],
       peers: {},
     }),
@@ -716,6 +726,44 @@ export const useChat = create<ChatState>((set, get) => ({
     set({ friends: res.friends, friendsTotal: res.total, friendsOnline: res.onlineCount, incoming: res.incoming })
   },
 
+  loadStories: async () => {
+    const res = await api<{ groups: StoryGroup[] }>('/stories')
+    set({ stories: res.groups })
+  },
+
+  createStory: async (mediaUrl, caption) => {
+    const res = await api<{ story: Story }>('/stories', { method: 'POST', body: { mediaUrl, caption } })
+    await get().loadStories()
+    return res.story
+  },
+
+  deleteStory: async (storyId) => {
+    await api(`/stories/${storyId}`, { method: 'DELETE' })
+    set((s) => ({
+      stories: s.stories
+        .map((g) => ({ ...g, stories: g.stories.filter((st) => st.id !== storyId) }))
+        .filter((g) => g.stories.length > 0),
+    }))
+  },
+
+  markStorySeen: (storyId) => {
+    set((s) => ({
+      stories: s.stories.map((g) => ({
+        ...g,
+        stories: g.stories.map((st) => (st.id === storyId ? { ...st, viewed: true } : st)),
+      })),
+    }))
+    void api(`/stories/${storyId}/seen`, { method: 'POST' }).then((res) => {
+      const story = (res as { story: Story }).story
+      set((s) => ({
+        stories: s.stories.map((g) => ({
+          ...g,
+          stories: g.stories.map((st) => (st.id === story.id ? { ...st, viewCount: story.viewCount } : st)),
+        })),
+      }))
+    })
+  },
+
   initSocket: () => {
     const socket = connectSocket()
     set({ meId: useAuth.getState().user?.id ?? '' })
@@ -1013,6 +1061,20 @@ export const useChat = create<ChatState>((set, get) => ({
     socket.on('friend:request:accepted', (data: { user: PublicUser }) => {
       void get().loadFriends()
       get().pushToast({ kind: 'friend', title: 'Friend request accepted', body: data.user.fullName })
+    })
+
+    socket.on('story:new', (data: Story & { user?: PublicUser }) => {
+      void get().loadStories()
+      get().pushToast({ kind: 'friend', title: 'New story', body: data.user?.fullName ?? 'A friend shared a story' })
+    })
+
+    socket.on('story:seen', (data: { storyId: string }) => {
+      set((s) => ({
+        stories: s.stories.map((g) => ({
+          ...g,
+          stories: g.stories.map((st) => (st.id === data.storyId ? { ...st, viewCount: st.viewCount + 1 } : st)),
+        })),
+      }))
     })
   },
 

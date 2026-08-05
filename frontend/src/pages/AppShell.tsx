@@ -14,6 +14,7 @@ export default function AppShell() {
   const socketReady = useChat((s) => s.socketReady)
   const loadConversations = useChat((s) => s.loadConversations)
   const loadFriends = useChat((s) => s.loadFriends)
+  const loadStories = useChat((s) => s.loadStories)
   const conversations = useChat((s) => s.conversations)
   const rooms = useChat((s) => s.rooms)
   const navigate = useNavigate()
@@ -50,8 +51,9 @@ export default function AppShell() {
     initSocket()
     loadConversations().catch(() => {})
     loadFriends().catch(() => {})
+    loadStories().catch(() => {})
     return () => destroySocket()
-  }, [ready, user, navigate, initSocket, destroySocket, loadConversations, loadFriends])
+  }, [ready, user, navigate, initSocket, destroySocket, loadConversations, loadFriends, loadStories])
 
   if (!ready) {
     return (

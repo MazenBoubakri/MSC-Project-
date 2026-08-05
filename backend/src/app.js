@@ -9,6 +9,7 @@ import friendsRoutes from './routes/friends.js';
 import conversationsRoutes from './routes/conversations.js';
 import messagesRoutes from './routes/messages.js';
 import roomsRoutes from './routes/rooms.js';
+import storiesRoutes from './routes/stories.js';
 import uploadRoutes from './routes/upload.js';
 
 export function createApp() {
@@ -43,6 +44,7 @@ export function createApp() {
   app.use('/api/conversations', conversationsRoutes);
   app.use('/api/conversations', messagesRoutes);
   app.use('/api/rooms', roomsRoutes);
+  app.use('/api/stories', storiesRoutes);
   app.use('/api/upload', uploadRoutes);
 
   app.use(notFound);
