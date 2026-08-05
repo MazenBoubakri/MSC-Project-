@@ -95,7 +95,7 @@ router.get('/', async (req, res) => {
     { to: req.userId },
   ]);
 
-  const friendIds = accepted.map((f) => String(f.from === req.userId ? f.to : f.from));
+  const friendIds = accepted.map((f) => (String(f.from) === req.userId ? String(f.to) : String(f.from)));
   const users = await User.find({ _id: { $in: friendIds } }).select(
     'username fullName avatarUrl avatarColor lastSeen bio status'
   );
