@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { Types } from 'mongoose';
 import { requireAuth } from '../middleware/auth.js';
 import { FriendRequest } from '../models/FriendRequest.js';
 import { User } from '../models/User.js';
@@ -105,9 +106,12 @@ router.get('/suggestions', async (req, res) => {
         incomingReq.map((r) => String(r.from))
       )
       .map((id) => String(id))
+      .filter((id) => /^[0-9a-fA-F]{24}$/.test(id))
   );
 
-  const docs = await User.aggregate([{ $match: { _id: { $nin: [...exclude] } } }, { $sample: { size: 5 } }]);
+  // $nin on _id needs real ObjectIds, not strings, or nothing gets excluded.
+  const excludeIds = [...exclude].map((id) => new Types.ObjectId(id));
+  const docs = await User.aggregate([{ $match: { _id: { $nin: excludeIds } } }, { $sample: { size: 5 } }]);
   const suggestions = docs.map(toPublicUserDTO);
   const pendingIds = new Set(outgoing.filter((r) => r.status === 'pending').map((r) => String(r.to)));
 
