@@ -111,6 +111,12 @@ export default function ChatView() {
     if (conversationId) void openConversationById(conversationId)
   }, [conversationId, openConversationById])
 
+  // bounce out when the conversation no longer exists (e.g. friend removed)
+  useEffect(() => {
+    if (loadingConversations) return
+    if (!conversations.find((c) => c.id === conversationId)) navigate('/app', { replace: true })
+  }, [conversations, conversationId, loadingConversations, navigate])
+
   // re-join the conversation room after a socket reconnect
   useEffect(() => {
     if (socketReady && conversationId) {

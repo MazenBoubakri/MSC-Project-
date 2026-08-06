@@ -44,8 +44,8 @@ export default function StoriesBar({ onCreate, onOpenUser }: StoriesBarProps) {
         <span className="text-[11px] text-ink-3">Your story</span>
       </button>
       {stories.map((g) => {
-        const hasUnseen = g.stories.some((st) => !st.viewed)
         const mine = g.user.id === meId
+        const hasUnseen = !mine && g.stories.some((st) => !st.viewed)
         return (
           <button
             key={g.user.id}

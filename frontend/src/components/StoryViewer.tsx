@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CaretLeft, CaretRight, Eye, SpinnerGap, Trash, X } from '@phosphor-icons/react'
+import { CaretLeft, CaretRight, Eye, Heart, SpinnerGap, Trash, X } from '@phosphor-icons/react'
 import Avatar from './Avatar'
 import Modal from './Modal'
 import { useChat } from '../store/chat'
@@ -19,6 +19,7 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
   const markStorySeen = useChat((s) => s.markStorySeen)
   const deleteStory = useChat((s) => s.deleteStory)
   const fetchStoryViewers = useChat((s) => s.fetchStoryViewers)
+  const toggleStoryReact = useChat((s) => s.toggleStoryReact)
 
   const group = stories.find((g) => g.user.id === ownerId)
   const [index, setIndex] = useState(0)
@@ -168,6 +169,13 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
           </button>
         )}
         {isMine && (
+          <span
+            className="flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium text-white"
+          >
+            <Heart size={13} weight="fill" className="text-rose-400" /> {story.reactionCount}
+          </span>
+        )}
+        {isMine && (
           <button
             type="button"
             aria-label="Delete story"
@@ -208,7 +216,28 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
       </div>
 
       {story.caption && (
-        <p className="absolute inset-x-0 bottom-8 px-6 text-center text-sm text-white drop-shadow">{story.caption}</p>
+        <p className="absolute inset-x-0 bottom-20 px-6 text-center text-sm text-white drop-shadow">{story.caption}</p>
+      )}
+
+      {!isMine && (
+        <button
+          type="button"
+          aria-label={story.reacted ? 'Remove reaction' : 'Like this story'}
+          onClick={(e) => {
+            e.stopPropagation()
+            toggleStoryReact(story.id)
+          }}
+          onPointerDown={stopPointer}
+          onPointerUp={stopPointer}
+          className="absolute right-4 bottom-4 z-10 flex size-12 items-center justify-center rounded-full transition active:scale-90"
+        >
+          <Heart
+            key={`${story.id}-${story.reacted}`}
+            size={30}
+            weight={story.reacted ? 'fill' : 'regular'}
+            className={story.reacted ? 'animate-heart-pop text-rose-500' : 'text-white/90 drop-shadow'}
+          />
+        </button>
       )}
 
       {/* nav hit zones */}

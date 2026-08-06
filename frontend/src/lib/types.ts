@@ -143,6 +143,8 @@ export interface Story {
   createdAt: string
   viewed: boolean
   viewCount: number
+  reacted: boolean
+  reactionCount: number
 }
 
 export interface StoryGroup {

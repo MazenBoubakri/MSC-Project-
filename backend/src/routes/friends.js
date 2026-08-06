@@ -3,6 +3,8 @@ import { Types } from 'mongoose';
 import { requireAuth } from '../middleware/auth.js';
 import { FriendRequest } from '../models/FriendRequest.js';
 import { User } from '../models/User.js';
+import { Conversation } from '../models/Conversation.js';
+import { Message } from '../models/Message.js';
 import { ApiError } from '../lib/errors.js';
 import { isOnline } from '../lib/presence.js';
 import { toPublicUserDTO } from '../lib/user-dto.js';
@@ -76,7 +78,8 @@ router.post('/requests/:id/decline', async (req, res) => {
   res.json({ ok: true });
 });
 
-// Remove a friendship entirely (either direction).
+// Remove a friendship entirely (either direction). The direct conversation
+// and its messages are deleted too, and both sides are told to drop it.
 router.post('/remove', async (req, res) => {
   const { userId } = req.body ?? {};
   if (!userId) throw ApiError.badRequest('userId is required');
@@ -86,6 +89,18 @@ router.post('/remove', async (req, res) => {
       { from: userId, to: req.userId, status: 'accepted' },
     ],
   });
+
+  const conversation = await Conversation.findOneAndDelete({
+    participants: { $all: [req.userId, userId], $size: 2 },
+  });
+  if (conversation) {
+    await Message.deleteMany({ conversationId: conversation._id });
+    const io = getIo();
+    const payload = { conversationId: String(conversation._id) };
+    io?.to(userRoom(req.userId)).emit('conversation:removed', payload);
+    io?.to(userRoom(String(userId))).emit('conversation:removed', payload);
+  }
+
   res.json({ removed: result.deletedCount });
 });
 

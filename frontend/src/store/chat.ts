@@ -126,6 +126,7 @@ interface ChatState {
   createStory: (mediaUrl: string, caption: string) => Promise<Story | null>
   deleteStory: (storyId: string) => Promise<void>
   markStorySeen: (storyId: string) => void
+  toggleStoryReact: (storyId: string) => void
   fetchStoryViewers: (storyId: string) => Promise<StoryViewer[]>
 
   pushToast: (t: Omit<Toast, 'id'>) => void
@@ -724,6 +725,20 @@ export const useChat = create<ChatState>((set, get) => ({
   removeFriend: async (userId) => {
     await api('/friends/remove', { method: 'POST', body: { userId } })
     await get().loadFriends()
+    const convo = get().conversations.find((c) => c.peer.id === userId)
+    if (convo) {
+      set((s) => {
+        const { [convo.id]: _drop, ...messages } = s.messages
+        const { [convo.id]: _dropHas, ...hasMore } = s.hasMore
+        const { [convo.id]: _dropLoad, ...loadingMessages } = s.loadingMessages
+        return {
+          conversations: s.conversations.filter((c) => c.id !== convo.id),
+          messages,
+          hasMore,
+          loadingMessages,
+        }
+      })
+    }
   },
 
   blockUser: async (userId) => {
@@ -776,7 +791,37 @@ export const useChat = create<ChatState>((set, get) => ({
       set((s) => ({
         stories: s.stories.map((g) => ({
           ...g,
-          stories: g.stories.map((st) => (st.id === story.id ? { ...st, viewCount: story.viewCount } : st)),
+          stories: g.stories.map((st) =>
+            st.id === story.id ? { ...st, viewed: true, viewCount: story.viewCount } : st
+          ),
+        })),
+      }))
+    })
+  },
+
+  toggleStoryReact: (storyId) => {
+    const story = get()
+      .stories.flatMap((g) => g.stories)
+      .find((st) => st.id === storyId)
+    if (!story) return
+    set((s) => ({
+      stories: s.stories.map((g) => ({
+        ...g,
+        stories: g.stories.map((st) =>
+          st.id === storyId
+            ? { ...st, reacted: !st.reacted, reactionCount: st.reactionCount + (st.reacted ? -1 : 1) }
+            : st
+        ),
+      })),
+    }))
+    void api(`/stories/${storyId}/react`, { method: 'POST' }).then((res) => {
+      const { story: updated } = res as { story: Story }
+      set((s) => ({
+        stories: s.stories.map((g) => ({
+          ...g,
+          stories: g.stories.map((st) =>
+            st.id === updated.id ? { ...st, reacted: updated.reacted, reactionCount: updated.reactionCount } : st
+          ),
         })),
       }))
     })
@@ -1103,12 +1148,35 @@ export const useChat = create<ChatState>((set, get) => ({
       }))
     })
 
+    socket.on('story:reacted', (data: { storyId: string; count: number }) => {
+      set((s) => ({
+        stories: s.stories.map((g) => ({
+          ...g,
+          stories: g.stories.map((st) => (st.id === data.storyId ? { ...st, reactionCount: data.count } : st)),
+        })),
+      }))
+    })
+
     socket.on('story:deleted', (data: { storyId: string }) => {
       set((s) => ({
         stories: s.stories
           .map((g) => ({ ...g, stories: g.stories.filter((st) => st.id !== data.storyId) }))
           .filter((g) => g.stories.length > 0),
       }))
+    })
+
+    socket.on('conversation:removed', (data: { conversationId: string }) => {
+      set((s) => {
+        const { [data.conversationId]: _drop, ...messages } = s.messages
+        const { [data.conversationId]: _dropHas, ...hasMore } = s.hasMore
+        const { [data.conversationId]: _dropLoad, ...loadingMessages } = s.loadingMessages
+        return {
+          conversations: s.conversations.filter((c) => c.id !== data.conversationId),
+          messages,
+          hasMore,
+          loadingMessages,
+        }
+      })
     })
   },
 

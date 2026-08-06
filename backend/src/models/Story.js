@@ -8,6 +8,14 @@ const seenBySchema = new mongoose.Schema(
   { _id: false }
 );
 
+const reactionSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    reactedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 const storySchema = new mongoose.Schema(
   {
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -15,6 +23,7 @@ const storySchema = new mongoose.Schema(
     mediaType: { type: String, enum: ['image'], default: 'image' },
     caption: { type: String, default: '', maxlength: 500 },
     seenBy: { type: [seenBySchema], default: [] },
+    reactions: { type: [reactionSchema], default: [] },
   },
   { timestamps: true }
 );

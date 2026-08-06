@@ -25,6 +25,7 @@ async function friendIds(userId) {
 
 function toStoryDTO(story, viewerId) {
   const seenBy = story.seenBy ?? [];
+  const reactions = story.reactions ?? [];
   return {
     id: String(story._id),
     ownerId: String(story.owner),
@@ -34,6 +35,8 @@ function toStoryDTO(story, viewerId) {
     createdAt: story.createdAt,
     viewed: seenBy.some((s) => String(s.userId) === String(viewerId)),
     viewCount: seenBy.length,
+    reacted: reactions.some((r) => String(r.userId) === String(viewerId)),
+    reactionCount: reactions.length,
   };
 }
 
@@ -96,6 +99,30 @@ router.delete('/:id', async (req, res) => {
   }
 
   res.json({ ok: true });
+});
+
+// Toggle a heart reaction on a story.
+router.post('/:id/react', async (req, res) => {
+  const story = await Story.findOne({ _id: req.params.id });
+  if (!story) throw ApiError.notFound('Story not found');
+
+  const me = String(req.userId);
+  const reactions = story.reactions ?? [];
+  const idx = reactions.findIndex((r) => String(r.userId) === me);
+  const reacted = idx < 0;
+  if (reacted) reactions.push({ userId: me, reactedAt: new Date() });
+  else reactions.splice(idx, 1);
+  story.reactions = reactions;
+  await story.save();
+
+  getIo()?.to(userRoom(String(story.owner))).emit('story:reacted', {
+    storyId: String(story._id),
+    reactedBy: me,
+    count: reactions.length,
+    reacted,
+  });
+
+  res.json({ story: toStoryDTO(story, req.userId) });
 });
 
 router.post('/:id/seen', async (req, res) => {
