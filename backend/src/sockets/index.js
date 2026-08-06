@@ -9,7 +9,7 @@ import { FriendRequest } from '../models/FriendRequest.js';
 import { setIo, userRoom, convoRoom, roomRoom } from '../lib/io.js';
 import { markOnline, markOffline } from '../lib/presence.js';
 import { createMessage } from '../lib/messages.js';
-import { toMessageDTO } from '../lib/dto.js';
+import { toMessageDTO, toConversationDTO, toRoomListItem } from '../lib/dto.js';
 import { broadcastNewMessage, broadcastRead } from '../lib/broadcast.js';
 import { blockDirection, userBlocks } from '../lib/blocks.js';
 
@@ -280,7 +280,8 @@ export function registerSockets(io) {
       }
     });
 
-    // Delete own message for everyone (tombstone stays for receipts).
+    // Delete own message for everyone (tombstone stays for receipts). The
+    // conversation/room preview falls back to the previous non-deleted message.
     socket.on('message:delete', async ({ conversationId, roomId, messageId } = {}, ack) => {
       try {
         const target = await resolveTarget({ conversationId, roomId, userId });
@@ -293,11 +294,47 @@ export function registerSockets(io) {
         );
         if (!msg) return ack?.({ ok: false, error: 'Message not found' });
 
-        io.to(target.kind === 'room' ? roomRoom(target.room._id) : convoRoom(target.convo._id)).emit('message:deleted', {
+        const payload = {
           conversationId: target.kind === 'convo' ? String(target.convo._id) : undefined,
           roomId: target.kind === 'room' ? String(target.room._id) : undefined,
           messageId: String(msg._id),
+        };
+
+        if (target.kind === 'room') {
+          const latest = await Message.findOne({ roomId: target.room._id, deleted: { $ne: true } }).sort({
+            createdAt: -1,
+          });
+          target.room.lastMessageAt = latest ? latest.createdAt : null;
+          target.room.lastMessagePreview = latest
+            ? latest.type === 'image'
+              ? 'Photo'
+              : latest.type === 'voice'
+                ? 'Voice message'
+                : latest.body || ''
+            : '';
+          target.room.lastMessageType = latest?.type ?? 'text';
+          target.room.lastMessageSenderId = latest ? latest.senderId : null;
+          await target.room.save();
+          payload.room = toRoomListItem(target.room, userId);
+          io.to(roomRoom(target.room._id)).emit('message:deleted', payload);
+          return ack?.({ ok: true });
+        }
+
+        const latest = await Message.findOne({ conversationId: target.convo._id, deleted: { $ne: true } }).sort({
+          createdAt: -1,
         });
+        target.convo.lastMessageAt = latest ? latest.createdAt : null;
+        target.convo.lastMessagePreview = latest
+          ? latest.type === 'image'
+            ? 'Photo'
+            : latest.type === 'voice'
+              ? 'Voice message'
+              : latest.body || ''
+          : '';
+        target.convo.lastMessageType = latest?.type ?? 'text';
+        await target.convo.save();
+        payload.conversation = toConversationDTO(target.convo, userId);
+        io.to(convoRoom(target.convo._id)).emit('message:deleted', payload);
         ack?.({ ok: true });
       } catch {
         ack?.({ ok: false });

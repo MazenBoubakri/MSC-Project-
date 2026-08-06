@@ -584,11 +584,12 @@ export const useChat = create<ChatState>((set, get) => ({
   deleteMessage: async (target, messageId) => {
     const key = targetKey(target)
     const socket = getSocket()
+    if (!socket) return false
     const ok = await new Promise<boolean>((resolve) => {
       const payload = target.conversationId
         ? { conversationId: target.conversationId, messageId }
         : { roomId: target.roomId, messageId }
-      socket?.emit('message:delete', payload, (r: { ok?: boolean } | null) => {
+      socket.emit('message:delete', payload, (r: { ok?: boolean } | null) => {
         resolve(r?.ok === true)
       })
     })
@@ -1028,7 +1029,13 @@ export const useChat = create<ChatState>((set, get) => ({
 
     socket.on(
       'message:deleted',
-      (data: { conversationId?: string; roomId?: string; messageId: string }) => {
+      (data: {
+        conversationId?: string
+        roomId?: string
+        messageId: string
+        conversation?: ConversationListItem
+        room?: Room
+      }) => {
         const { conversationId, roomId, messageId } = data
         const key = roomId ?? conversationId
         if (!key) return
@@ -1039,6 +1046,33 @@ export const useChat = create<ChatState>((set, get) => ({
               m.id === messageId ? { ...m, deleted: true, body: null, mediaUrl: null, reactions: [] } : m
             ),
           },
+          conversations: data.conversation
+            ? s.conversations
+                .map((c) =>
+                  c.id === data.conversation!.id
+                    ? {
+                        ...c,
+                        lastMessageAt: data.conversation!.lastMessageAt,
+                        lastMessagePreview: data.conversation!.lastMessagePreview,
+                        lastMessageType: data.conversation!.lastMessageType,
+                      }
+                    : c
+                )
+                .sort(sortByActivity)
+            : s.conversations,
+          rooms: data.room
+            ? s.rooms.map((r) =>
+                r.id === data.room!.id
+                  ? {
+                      ...r,
+                      lastMessageAt: data.room!.lastMessageAt,
+                      lastMessagePreview: data.room!.lastMessagePreview,
+                      lastMessageType: data.room!.lastMessageType,
+                      lastMessageSenderId: data.room!.lastMessageSenderId,
+                    }
+                  : r
+              )
+            : s.rooms,
         }))
       }
     )
