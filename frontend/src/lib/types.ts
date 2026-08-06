@@ -88,6 +88,10 @@ export interface FriendsPayload {
   incoming: FriendRequestDTO[]
 }
 
+export interface Suggestion extends PublicUser {
+  requested: boolean
+}
+
 export interface UserProfile extends PublicUser {
   friendStatus: 'none' | 'sent' | 'incoming' | 'friends'
   /** true when the viewer has blocked this user */

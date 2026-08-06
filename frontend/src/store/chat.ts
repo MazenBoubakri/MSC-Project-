@@ -17,6 +17,7 @@ import type {
   Story,
   StoryGroup,
   StoryViewer,
+  Suggestion,
   UserProfile,
 } from '../lib/types'
 
@@ -60,6 +61,7 @@ interface ChatState {
   friendsTotal: number
   friendsOnline: number
   incoming: FriendRequestDTO[]
+  suggestions: Suggestion[]
   stories: StoryGroup[]
   toasts: Toast[]
   peers: Record<string, PublicUser>
@@ -118,6 +120,7 @@ interface ChatState {
   blockUser: (userId: string) => Promise<void>
   unblockUser: (userId: string) => Promise<void>
   loadFriends: () => Promise<void>
+  loadSuggestions: () => Promise<void>
 
   loadStories: () => Promise<void>
   createStory: (mediaUrl: string, caption: string) => Promise<Story | null>
@@ -158,6 +161,7 @@ export const useChat = create<ChatState>((set, get) => ({
   friendsTotal: 0,
   friendsOnline: 0,
   incoming: [],
+  suggestions: [],
   stories: [],
   toasts: [],
   peers: {},
@@ -179,6 +183,7 @@ export const useChat = create<ChatState>((set, get) => ({
       friendsTotal: 0,
       friendsOnline: 0,
       incoming: [],
+      suggestions: [],
       stories: [],
       toasts: [],
       peers: {},
@@ -695,14 +700,14 @@ export const useChat = create<ChatState>((set, get) => ({
 
   sendFriendRequest: async (userId) => {
     await api('/friends/requests', { method: 'POST', body: { userId } })
-    await get().loadFriends()
+    await Promise.all([get().loadFriends(), get().loadSuggestions()])
   },
 
   acceptRequest: async (userId) => {
     const req = get().incoming.find((r) => r.from?.id === userId)
     if (!req) return
     await api(`/friends/requests/${req.id}/accept`, { method: 'POST' })
-    await Promise.all([get().loadFriends(), get().loadConversations()])
+    await Promise.all([get().loadFriends(), get().loadConversations(), get().loadSuggestions()])
   },
 
   declineRequest: async (requestId) => {
@@ -726,6 +731,11 @@ export const useChat = create<ChatState>((set, get) => ({
   loadFriends: async () => {
     const res = await api<FriendsPayload>('/friends')
     set({ friends: res.friends, friendsTotal: res.total, friendsOnline: res.onlineCount, incoming: res.incoming })
+  },
+
+  loadSuggestions: async () => {
+    const res = await api<{ suggestions: Suggestion[] }>('/friends/suggestions')
+    set({ suggestions: res.suggestions })
   },
 
   loadStories: async () => {
@@ -824,6 +834,7 @@ export const useChat = create<ChatState>((set, get) => ({
       // re-sync after a reconnect (restart, network blip)
       void get().loadConversations().catch(() => {})
       void get().loadFriends().catch(() => {})
+      void get().loadSuggestions().catch(() => {})
       void get().loadRooms().catch(() => {})
     })
     socket.on('disconnect', () => set({ socketReady: false }))
@@ -1062,11 +1073,13 @@ export const useChat = create<ChatState>((set, get) => ({
 
     socket.on('friend:request:new', () => {
       void get().loadFriends()
+      void get().loadSuggestions()
       get().pushToast({ kind: 'friend', title: 'New friend request', body: 'Someone wants to chat' })
     })
 
     socket.on('friend:request:accepted', (data: { user: PublicUser }) => {
       void get().loadFriends()
+      void get().loadSuggestions()
       get().pushToast({ kind: 'friend', title: 'Friend request accepted', body: data.user.fullName })
     })
 

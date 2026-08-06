@@ -10,6 +10,7 @@ import {
   MagnifyingGlass,
   Plus,
   SignOut,
+  Sparkle,
   UserCirclePlus,
   UsersFour,
   UsersThree,
@@ -47,11 +48,13 @@ export default function Sidebar() {
   const friendsOnline = useChat((s) => s.friendsOnline)
   const friendsTotal = useChat((s) => s.friendsTotal)
   const incoming = useChat((s) => s.incoming)
+  const suggestions = useChat((s) => s.suggestions)
   const openConversation = useChat((s) => s.openConversation)
   const joinRoom = useChat((s) => s.joinRoom)
   const leaveRoom = useChat((s) => s.leaveRoom)
   const acceptRequest = useChat((s) => s.acceptRequest)
   const declineRequest = useChat((s) => s.declineRequest)
+  const sendFriendRequest = useChat((s) => s.sendFriendRequest)
 
   const unreadTotal = conversations.reduce((n, c) => n + c.unread, 0)
   const requestsCount = incoming.length
@@ -200,7 +203,7 @@ export default function Sidebar() {
         )}
         {tab === 'requests' && (
           <div className="flex flex-col gap-1">
-            {incoming.length === 0 && (
+            {incoming.length === 0 && suggestions.length === 0 && (
               <EmptyState
                 icon={UserCirclePlus}
                 title="No pending requests"
@@ -238,6 +241,39 @@ export default function Sidebar() {
                 </button>
               </div>
             ))}
+            {suggestions.length > 0 && (
+              <>
+                <div className="flex items-center gap-2 px-2 pt-3 pb-1">
+                  <Sparkle size={13} weight="fill" className="text-accent" />
+                  <p className="text-xs font-medium text-ink-3">Suggested for you</p>
+                </div>
+                {suggestions.map((u) => (
+                  <div
+                    key={u.id}
+                    className="group flex min-h-16 items-center gap-3 rounded-xl p-2.5 transition hover:bg-surface-2 lg:min-h-0"
+                  >
+                    <Avatar name={u.fullName} color={u.avatarColor} src={u.avatarUrl} size={42} online={onlineMap[u.id]} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-ink">{u.fullName}</p>
+                      <p className="truncate font-mono text-xs text-ink-3">@{u.username}</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={u.requested}
+                      onClick={() => void sendFriendRequest(u.id).catch(() => {})}
+                      className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                        u.requested
+                          ? 'bg-surface-2 text-ink-3'
+                          : 'bg-accent text-accent-ink hover:bg-accent-strong'
+                      }`}
+                    >
+                      {u.requested ? <Check size={13} weight="bold" /> : <Plus size={13} weight="bold" />}
+                      {u.requested ? 'Requested' : 'Add'}
+                    </button>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         )}
       </div>

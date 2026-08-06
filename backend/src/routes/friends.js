@@ -88,6 +88,34 @@ router.post('/remove', async (req, res) => {
   res.json({ removed: result.deletedCount });
 });
 
+// Random people to suggest: excludes me, friends, anyone I already asked
+// (pending or declined), and anyone who already has a pending request to me.
+router.get('/suggestions', async (req, res) => {
+  const [accepted, outgoing, incomingReq] = await Promise.all([
+    FriendRequest.find({ status: 'accepted' }).or([{ from: req.userId }, { to: req.userId }]),
+    FriendRequest.find({ from: req.userId, status: { $in: ['pending', 'declined'] } }),
+    FriendRequest.find({ to: req.userId, status: 'pending' }),
+  ]);
+
+  const exclude = new Set(
+    [req.userId]
+      .concat(
+        accepted.map((f) => (String(f.from) === req.userId ? String(f.to) : String(f.from))),
+        outgoing.map((r) => String(r.to)),
+        incomingReq.map((r) => String(r.from))
+      )
+      .map((id) => String(id))
+  );
+
+  const docs = await User.aggregate([{ $match: { _id: { $nin: [...exclude] } } }, { $sample: { size: 5 } }]);
+  const suggestions = docs.map(toPublicUserDTO);
+  const pendingIds = new Set(outgoing.filter((r) => r.status === 'pending').map((r) => String(r.to)));
+
+  res.json({
+    suggestions: suggestions.map((u) => ({ ...u, requested: pendingIds.has(u.id) })),
+  });
+});
+
 // Friends list with live presence + pending requests for me.
 router.get('/', async (req, res) => {
   const accepted = await FriendRequest.find({ status: 'accepted' }).or([
