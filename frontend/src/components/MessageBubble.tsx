@@ -62,8 +62,19 @@ export default function MessageBubble({
   const [retrying, setRetrying] = useState(false)
 
   const peerRead = message.readBy.some((r) => r !== meId)
-  const others = message.reactions.filter((r) => r.user !== meId)
   const mineReactions = message.reactions.filter((r) => r.user === meId)
+
+  // one pill per emoji, with a counter for 2+ reactions from different people
+  const reactionCounts = (() => {
+    const counts = new Map<string, { count: number; mine: boolean }>()
+    for (const r of message.reactions) {
+      const entry = counts.get(r.emoji) ?? { count: 0, mine: false }
+      entry.count += 1
+      if (r.user === meId) entry.mine = true
+      counts.set(r.emoji, entry)
+    }
+    return [...counts.entries()]
+  })()
 
   // Preview line for the quoted block. Snapshots are frozen at send time, so
   // this shows the stored body ('Message deleted' when the snapshot is empty).
@@ -360,26 +371,23 @@ export default function MessageBubble({
           </div>
         )}
 
-        {!message.deleted && (others.length > 0 || mineReactions.length > 0) && (
+        {!message.deleted && reactionCounts.length > 0 && (
           <div className={`mt-1 flex flex-wrap gap-1 ${mine ? 'justify-end' : 'justify-start'}`}>
-            {others.map((r) => (
+            {reactionCounts.map(([emoji, { count, mine: mineReacted }]) => (
               <button
-                key={`${r.user}-${r.emoji}`}
+                key={emoji}
                 type="button"
-                onClick={() => toggleReaction(target, message.id, r.emoji)}
-                className="flex items-center gap-1 rounded-full bg-surface px-2 py-0.5 text-xs shadow-sm ring-1 ring-line transition hover:bg-surface-2"
+                onClick={() => toggleReaction(target, message.id, emoji)}
+                className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs shadow-sm ring-1 transition ${
+                  mineReacted ? 'bg-accent-soft ring-accent/40' : 'bg-surface ring-line hover:bg-surface-2'
+                }`}
               >
-                {r.emoji}
-              </button>
-            ))}
-            {mineReactions.map((r) => (
-              <button
-                key={`me-${r.emoji}`}
-                type="button"
-                onClick={() => toggleReaction(target, message.id, r.emoji)}
-                className="flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-xs shadow-sm ring-1 ring-accent/40 transition"
-              >
-                {r.emoji}
+                {emoji}
+                {count > 1 && (
+                  <span className={`text-[10px] font-semibold ${mineReacted ? 'text-accent' : 'text-ink-2'}`}>
+                    {count}
+                  </span>
+                )}
               </button>
             ))}
           </div>
