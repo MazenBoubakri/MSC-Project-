@@ -189,7 +189,13 @@ export const useChat = create<ChatState>((set, get) => ({
       peers: {},
     }),
 
-  pushToast: (t) => set((s) => ({ toasts: [...s.toasts, { ...t, id: crypto.randomUUID() }] })),
+  pushToast: (t) => {
+    const id = crypto.randomUUID()
+    set((s) => ({ toasts: [...s.toasts, { ...t, id }] }))
+    setTimeout(() => {
+      set((s) => ({ toasts: s.toasts.filter((toast) => toast.id !== id) }))
+    }, 5000)
+  },
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 
   loadConversations: async () => {
