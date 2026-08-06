@@ -18,7 +18,7 @@ async function main() {
   registerSockets(io);
 
   httpServer.listen(PORT, () => {
-    console.log(`[server] MazenTalk backend on http://localhost:${PORT}`);
+    console.log(`[server] MazeChat backend on http://localhost:${PORT}`);
   });
 }
 

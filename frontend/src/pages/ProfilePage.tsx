@@ -22,7 +22,7 @@ export default function ProfilePage() {
   const [username, setUsername] = useState(user?.username ?? '')
   const [bio, setBio] = useState(user?.bio ?? '')
   const [status, setStatus] = useState<UserStatus>(user?.status ?? 'available')
-  const [dark, setDark] = useState(() => localStorage.getItem('mazentalk.theme') === 'dark')
+  const [dark, setDark] = useState(() => localStorage.getItem('mazechat.theme') === 'dark')
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +31,7 @@ export default function ProfilePage() {
     const next = !dark
     setDark(next)
     document.documentElement.classList.toggle('dark', next)
-    localStorage.setItem('mazentalk.theme', next ? 'dark' : 'light')
+    localStorage.setItem('mazechat.theme', next ? 'dark' : 'light')
   }
 
   const save = async () => {

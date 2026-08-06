@@ -38,7 +38,7 @@ export default function AppShell() {
   useEffect(() => {
     applyUnreadTitle(unread)
     return () => {
-      document.title = 'MazenTalk'
+      document.title = 'MazeChat'
     }
   }, [unread])
 
@@ -59,11 +59,11 @@ export default function AppShell() {
     return (
       <div className="flex h-dvh flex-col items-center justify-center gap-4 bg-canvas">
         <img
-          src="/logoMazenTalk.png"
-          alt="MazenTalk"
+          src="/logoMazeChat.png"
+          alt="MazeChat"
           className="size-16 animate-pulse object-contain drop-shadow-[0_4px_16px_rgba(43,92,255,0.35)]"
         />
-        <p className="text-sm font-semibold text-ink-2">MazenTalk</p>
+        <p className="text-sm font-semibold text-ink-2">MazeChat</p>
       </div>
     )
   }

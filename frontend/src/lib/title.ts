@@ -1,7 +1,7 @@
 // document.title unread badge, gated by the user preference.
 
-const PREF_KEY = 'mazentalk.titlebadge'
-const BASE_TITLE = 'MazenTalk'
+const PREF_KEY = 'mazechat.titlebadge'
+const BASE_TITLE = 'MazeChat'
 
 export function isTitleBadgeEnabled(): boolean {
   return localStorage.getItem(PREF_KEY) !== 'off'

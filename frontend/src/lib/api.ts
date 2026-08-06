@@ -1,7 +1,7 @@
 // Thin fetch wrapper. Bearer token from localStorage; throws ApiError with the
 // backend's `{ error: string }` message for inline display.
 
-const TOKEN_KEY = 'mazentalk.token'
+const TOKEN_KEY = 'mazechat.token'
 
 // Same-origin by default (Vite proxy in dev, backend static serving in prod).
 // Override with VITE_API_URL in frontend/.env.

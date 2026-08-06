@@ -121,12 +121,12 @@ export default function Welcome() {
         {/* compact brand header — mobile only */}
         <div className="order-1 flex items-center gap-3 lg:hidden">
           <img
-            src="/logoMazenTalk.png"
-            alt="MazenTalk"
+            src="/logoMazeChat.png"
+            alt="MazeChat"
             className="size-11 shrink-0 object-contain drop-shadow-[0_4px_12px_rgba(43,92,255,0.35)]"
           />
           <div>
-            <p className="text-lg font-bold tracking-tight text-ink">MazenTalk</p>
+            <p className="text-lg font-bold tracking-tight text-ink">MazeChat</p>
             <p className="text-xs text-ink-2">Say hello to your friends</p>
           </div>
         </div>
@@ -278,11 +278,11 @@ export default function Welcome() {
         <section className="order-3 lg:order-1">
           <div className="hidden items-center gap-3 lg:flex">
             <img
-              src="/logoMazenTalk.png"
-              alt="MazenTalk"
+              src="/logoMazeChat.png"
+              alt="MazeChat"
               className="size-12 shrink-0 object-contain drop-shadow-[0_4px_12px_rgba(43,92,255,0.35)]"
             />
-            <p className="text-2xl font-bold tracking-tight text-ink">MazenTalk</p>
+            <p className="text-2xl font-bold tracking-tight text-ink">MazeChat</p>
           </div>
 
           <h1 className="mt-0 max-w-md text-4xl leading-[1.08] font-bold tracking-tight text-ink lg:mt-8 lg:text-5xl">

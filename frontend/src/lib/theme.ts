@@ -1,9 +1,9 @@
 // Theme handling shared by boot (main.tsx) and the settings page. Stored in
-// localStorage under 'mazentalk.theme'; values: 'light' | 'dark' | 'system'.
+// localStorage under 'mazechat.theme'; values: 'light' | 'dark' | 'system'.
 
 export type ThemeMode = 'light' | 'dark' | 'system'
 
-const THEME_KEY = 'mazentalk.theme'
+const THEME_KEY = 'mazechat.theme'
 
 export function getStoredTheme(): ThemeMode {
   const v = localStorage.getItem(THEME_KEY)

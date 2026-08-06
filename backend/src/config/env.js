@@ -5,7 +5,7 @@ import { randomBytes } from 'node:crypto';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const PORT = process.env.PORT ?? 5000;
-export const MONGO_URI = process.env.MONGO_URI ?? 'mongodb://localhost:27017/mazentalk';
+export const MONGO_URI = process.env.MONGO_URI ?? 'mongodb://localhost:27017/mazechat';
 
 if (!process.env.JWT_SECRET) {
   if (process.env.NODE_ENV === 'production') {

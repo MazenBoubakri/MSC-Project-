@@ -1,6 +1,6 @@
 // Selectable conversation background patterns. Pure CSS (gradients) so they
 // adapt to light/dark theme via the --ink token; no image assets.
-// Choice is persisted per device under 'mazentalk.wallpaper'.
+// Choice is persisted per device under 'mazechat.wallpaper'.
 
 export interface Wallpaper {
   id: string
@@ -18,7 +18,7 @@ export const WALLPAPERS: Wallpaper[] = [
   { id: 'bubbles', name: 'Bubbles', className: 'wp-bubbles' },
 ]
 
-const KEY = 'mazentalk.wallpaper'
+const KEY = 'mazechat.wallpaper'
 
 export function getWallpaperId(): string {
   const v = localStorage.getItem(KEY)

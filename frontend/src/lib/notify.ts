@@ -1,7 +1,7 @@
 // Best-effort desktop notifications (Web Notification API) for when the tab
 // is hidden. Opt-in via Settings; permission requested on enable.
 
-const PREF_KEY = 'mazentalk.notif'
+const PREF_KEY = 'mazechat.notif'
 
 export function isDesktopNotifEnabled(): boolean {
   return localStorage.getItem(PREF_KEY) === 'on'
@@ -29,7 +29,7 @@ export function notifyMessage(title: string, body: string) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return
   if (!document.hidden) return
   try {
-    new Notification(title, { body, tag: 'mazentalk-message' })
+    new Notification(title, { body, tag: 'mazechat-message' })
   } catch {
     // some browsers require a service worker — best effort
   }

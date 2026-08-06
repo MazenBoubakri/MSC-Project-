@@ -1,7 +1,7 @@
 // Tiny WebAudio notification sound — no asset files, synthesized on demand.
 // Two short ascending tones (~90ms total), kept quiet.
 
-const PREF_KEY = 'mazentalk.sound'
+const PREF_KEY = 'mazechat.sound'
 const THROTTLE_MS = 400
 
 let ctx: AudioContext | null = null
