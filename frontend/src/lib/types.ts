@@ -145,3 +145,8 @@ export interface StoryGroup {
   user: PublicUser
   stories: Story[]
 }
+
+export interface StoryViewer {
+  user: PublicUser
+  seenAt: string
+}

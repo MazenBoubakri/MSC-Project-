@@ -116,4 +116,23 @@ router.post('/:id/seen', async (req, res) => {
   res.json({ story: toStoryDTO(story, req.userId) });
 });
 
+// Who viewed a story — visible to the owner only.
+router.get('/:id/viewers', async (req, res) => {
+  const story = await Story.findOne({ _id: req.params.id, owner: req.userId });
+  if (!story) throw ApiError.notFound('Story not found');
+
+  const seenBy = story.seenBy ?? [];
+  const users = await User.find({ _id: { $in: seenBy.map((s) => s.userId) } });
+  const userMap = new Map(users.map((u) => [String(u._id), u]));
+
+  const viewers = seenBy
+    .map((s) => ({
+      user: toPublicUserDTO(userMap.get(String(s.userId))),
+      seenAt: s.seenAt,
+    }))
+    .sort((a, b) => new Date(b.seenAt).getTime() - new Date(a.seenAt).getTime());
+
+  res.json({ viewers });
+});
+
 export default router;

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Image as ImageIcon, Microphone, PaperPlaneTilt, Trash, X } from '@phosphor-icons/react'
+import { Camera, Image as ImageIcon, ImageSquare, Microphone, PaperPlaneTilt, Trash, X } from '@phosphor-icons/react'
 
 interface ComposerProps {
   draft: string
   setDraft: (v: string) => void
   onSubmit: () => void
   onTyping: (t: boolean) => void
-  onPickImage: () => void
+  onPickImage: (source: 'camera' | 'gallery') => void
   onSendVoice: (blob: Blob, durationSec: number) => void
   /** message being replied to; renders the slim reply chip above the input row */
   replyingTo?: { senderName: string; body: string } | null
@@ -28,9 +28,19 @@ export default function Composer({
   const [recording, setRecording] = useState(false)
   const [recordingSec, setRecordingSec] = useState(0)
   const [micError, setMicError] = useState(false)
+  const [photoOpen, setPhotoOpen] = useState(false)
+  const photoRef = useRef<HTMLDivElement | null>(null)
   const recRef = useRef<{ rec: MediaRecorder; startedAt: number } | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const chunksRef = useRef<BlobPart[]>([])
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (photoRef.current && !photoRef.current.contains(e.target as Node)) setPhotoOpen(false)
+    }
+    window.addEventListener('mousedown', onClick)
+    return () => window.removeEventListener('mousedown', onClick)
+  }, [])
 
   const clearTimer = () => {
     if (timerRef.current) {
@@ -141,14 +151,40 @@ export default function Composer({
         </div>
       ) : (
         <div className="flex items-end gap-1.5">
-          <button
-            type="button"
-            aria-label="Attach image"
-            onClick={onPickImage}
-            className="flex size-10 shrink-0 items-center justify-center rounded-full text-ink-2 transition hover:bg-surface-2 hover:text-ink active:scale-95"
-          >
-            <ImageIcon size={20} />
-          </button>
+          <div className="relative shrink-0" ref={photoRef}>
+            <button
+              type="button"
+              aria-label="Attach image"
+              onClick={() => setPhotoOpen((v) => !v)}
+              className="flex size-10 shrink-0 items-center justify-center rounded-full text-ink-2 transition hover:bg-surface-2 hover:text-ink active:scale-95"
+            >
+              <ImageIcon size={20} />
+            </button>
+            {photoOpen && (
+              <div className="animate-fade-in absolute bottom-12 left-0 z-30 w-44 overflow-hidden rounded-xl bg-surface py-1 shadow-xl ring-1 ring-line">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhotoOpen(false)
+                    onPickImage('camera')
+                  }}
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition hover:bg-surface-2"
+                >
+                  <Camera size={16} /> Take a photo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhotoOpen(false)
+                    onPickImage('gallery')
+                  }}
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition hover:bg-surface-2"
+                >
+                  <ImageSquare size={16} /> From gallery
+                </button>
+              </div>
+            )}
+          </div>
           <button
             type="button"
             aria-label="Record voice message"

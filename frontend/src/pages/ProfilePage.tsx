@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check, Moon, SignOut, Sun } from '@phosphor-icons/react'
+import { ArrowLeft, Camera, Check, ImageSquare, Moon, SignOut, Sun } from '@phosphor-icons/react'
 import Avatar from '../components/Avatar'
 import { useAuth } from '../store/auth'
 import { useChat } from '../store/chat'
@@ -26,6 +26,23 @@ export default function ProfilePage() {
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false)
+  const avatarRef = useRef<HTMLDivElement | null>(null)
+  const cameraRef = useRef<HTMLInputElement | null>(null)
+  const galleryRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) setAvatarMenuOpen(false)
+    }
+    window.addEventListener('mousedown', onClick)
+    return () => window.removeEventListener('mousedown', onClick)
+  }, [])
+
+  const onAvatarPick = (source: 'camera' | 'gallery') => {
+    setAvatarMenuOpen(false)
+    ;(source === 'camera' ? cameraRef : galleryRef).current?.click()
+  }
 
   const toggleTheme = () => {
     const next = !dark
@@ -96,18 +113,37 @@ export default function ProfilePage() {
 
       <div className="mx-auto w-full max-w-md flex-1 px-4 py-6">
         <div className="flex flex-col items-center gap-3">
-          <label className="cursor-pointer" title="Upload avatar">
-            <span className="block rounded-full ring-2 ring-transparent transition hover:ring-accent">
+          <div className="relative" ref={avatarRef}>
+            <button
+              type="button"
+              aria-label="Change avatar"
+              onClick={() => setAvatarMenuOpen((v) => !v)}
+              className="block cursor-pointer rounded-full ring-2 ring-transparent transition hover:ring-accent"
+            >
               <Avatar name={user.fullName} color={user.avatarColor} src={user.avatarUrl} size={96} />
-            </span>
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/gif,image/webp"
-              className="hidden"
-              onChange={(e) => pickAvatar(e.target.files?.[0])}
-            />
-          </label>
-          <p className="text-xs text-ink-3">Tap the avatar to upload a photo</p>
+            </button>
+            {avatarMenuOpen && (
+              <div className="animate-fade-in absolute top-full left-1/2 z-30 mt-2 w-48 -translate-x-1/2 overflow-hidden rounded-xl bg-surface py-1 shadow-xl ring-1 ring-line">
+                <button
+                  type="button"
+                  onClick={() => onAvatarPick('camera')}
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition hover:bg-surface-2"
+                >
+                  <Camera size={16} /> Take a photo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onAvatarPick('gallery')}
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition hover:bg-surface-2"
+                >
+                  <ImageSquare size={16} /> Choose from gallery
+                </button>
+              </div>
+            )}
+          </div>
+          <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => pickAvatar(e.target.files?.[0])} />
+          <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickAvatar(e.target.files?.[0])} />
+          <p className="text-xs text-ink-3">Tap the avatar to change your photo</p>
         </div>
 
         <div className="mt-6 flex flex-col gap-4">

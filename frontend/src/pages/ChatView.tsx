@@ -62,7 +62,8 @@ export default function ChatView() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const didInitScroll = useRef(false)
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
+  const galleryRef = useRef<HTMLInputElement>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -189,7 +190,9 @@ export default function ChatView() {
     await sendText({ conversationId }, text, replyId)
   }
 
-  const pickImage = () => fileInputRef.current?.click()
+  const pickImage = (source: 'camera' | 'gallery') => {
+    ;(source === 'camera' ? cameraRef : galleryRef).current?.click()
+  }
 
   const onImageChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -463,7 +466,8 @@ export default function ChatView() {
         }
         onCancelReply={() => setReplyingTo(null)}
       />
-      <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={onImageChosen} />
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={onImageChosen} />
+      <input ref={galleryRef} type="file" accept="image/*" hidden onChange={onImageChosen} />
 
       <ProfileSheet userId={profileOpen ? peer!.id : null} onClose={() => setProfileOpen(false)} />
     </div>

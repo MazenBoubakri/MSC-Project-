@@ -1,9 +1,11 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  Camera,
   Eye,
   EyeSlash,
   Hash,
+  ImageSquare,
   LockKey,
   Microphone,
   PaperPlaneTilt,
@@ -57,8 +59,25 @@ export default function Welcome() {
   const [color, setColor] = useState(COLORS[0])
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false)
+  const avatarRef = useRef<HTMLDivElement | null>(null)
+  const cameraRef = useRef<HTMLInputElement | null>(null)
+  const galleryRef = useRef<HTMLInputElement | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) setAvatarMenuOpen(false)
+    }
+    window.addEventListener('mousedown', onClick)
+    return () => window.removeEventListener('mousedown', onClick)
+  }, [])
+
+  const onAvatarPick = (source: 'camera' | 'gallery') => {
+    setAvatarMenuOpen(false)
+    ;(source === 'camera' ? cameraRef : galleryRef).current?.click()
+  }
 
   useEffect(() => {
     if (ready && user) {
@@ -164,17 +183,36 @@ export default function Welcome() {
               {mode === 'create' && (
                 <>
                   <div className="flex flex-col items-center gap-3">
-                    <label className="cursor-pointer" title="Upload avatar">
-                      <span className="block rounded-full ring-2 ring-transparent transition hover:ring-accent">
+                    <div className="relative" ref={avatarRef}>
+                      <button
+                        type="button"
+                        aria-label="Choose avatar"
+                        onClick={() => setAvatarMenuOpen((v) => !v)}
+                        className="block cursor-pointer rounded-full ring-2 ring-transparent transition hover:ring-accent"
+                      >
                         <Avatar name={fullName || '?'} color={color} src={avatarUrl} size={72} />
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/png,image/jpeg,image/gif,image/webp"
-                        className="hidden"
-                        onChange={(e) => pickAvatar(e.target.files?.[0])}
-                      />
-                    </label>
+                      </button>
+                      {avatarMenuOpen && (
+                        <div className="animate-fade-in absolute top-full left-1/2 z-30 mt-2 w-48 -translate-x-1/2 overflow-hidden rounded-xl bg-surface py-1 shadow-xl ring-1 ring-line">
+                          <button
+                            type="button"
+                            onClick={() => onAvatarPick('camera')}
+                            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition hover:bg-surface-2"
+                          >
+                            <Camera size={16} /> Take a photo
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onAvatarPick('gallery')}
+                            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition hover:bg-surface-2"
+                          >
+                            <ImageSquare size={16} /> Choose from gallery
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => pickAvatar(e.target.files?.[0])} />
+                    <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickAvatar(e.target.files?.[0])} />
                     <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
                       {COLORS.map((c) => (
                         <button

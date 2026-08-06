@@ -68,7 +68,8 @@ export default function RoomView() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const didInitScroll = useRef(false)
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
+  const galleryRef = useRef<HTMLInputElement>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const room = rooms.find((r) => r.id === roomId)
@@ -580,7 +581,7 @@ export default function RoomView() {
         setDraft={setDraft}
         onSubmit={submitText}
         onTyping={notifyTyping}
-        onPickImage={() => fileInputRef.current?.click()}
+        onPickImage={(source) => (source === 'camera' ? cameraRef : galleryRef).current?.click()}
         onSendVoice={async (blob, durationSec) => {
           const replyId = replyingTo?.id
           setReplyingTo(null)
@@ -589,7 +590,8 @@ export default function RoomView() {
         replyingTo={replyingTo ? { senderName: replySenderName(replyingTo), body: replyPreview(replyingTo) } : null}
         onCancelReply={() => setReplyingTo(null)}
       />
-      <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={onImageChosen} />
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={onImageChosen} />
+      <input ref={galleryRef} type="file" accept="image/*" hidden onChange={onImageChosen} />
 
       {/* members modal: the users present in this room */}
       <Modal open={membersOpen} onClose={() => setMembersOpen(false)} title={`Members (${room.memberCount})`}>

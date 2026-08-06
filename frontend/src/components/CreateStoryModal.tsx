@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ImageSquare, SpinnerGap } from '@phosphor-icons/react'
+import { Camera, ImageSquare, SpinnerGap } from '@phosphor-icons/react'
 import Modal from './Modal'
 import { useChat } from '../store/chat'
 import { uploadFile } from '../lib/api'
@@ -11,7 +11,8 @@ interface CreateStoryModalProps {
 
 export default function CreateStoryModal({ open, onClose }: CreateStoryModalProps) {
   const createStory = useChat((s) => s.createStory)
-  const inputRef = useRef<HTMLInputElement | null>(null)
+  const cameraRef = useRef<HTMLInputElement | null>(null)
+  const galleryRef = useRef<HTMLInputElement | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [caption, setCaption] = useState('')
@@ -56,7 +57,15 @@ export default function CreateStoryModal({ open, onClose }: CreateStoryModalProp
   return (
     <Modal open={open} onClose={close} title="Add to your story" width="max-w-md">
       <input
-        ref={inputRef}
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+      />
+      <input
+        ref={galleryRef}
         type="file"
         accept="image/*"
         className="hidden"
@@ -64,14 +73,24 @@ export default function CreateStoryModal({ open, onClose }: CreateStoryModalProp
       />
 
       {!preview && (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-line py-14 text-ink-3 transition hover:border-ink-3 hover:text-ink-2"
-        >
-          <ImageSquare size={28} />
-          <span className="text-sm font-medium">Choose a photo</span>
-        </button>
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => cameraRef.current?.click()}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3.5 text-sm font-semibold text-accent-ink transition hover:bg-accent-strong"
+          >
+            <Camera size={18} weight="bold" />
+            Take a photo
+          </button>
+          <button
+            type="button"
+            onClick={() => galleryRef.current?.click()}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-line py-3.5 text-sm font-semibold text-ink transition hover:bg-surface-2"
+          >
+            <ImageSquare size={18} />
+            Choose from gallery
+          </button>
+        </div>
       )}
 
       {preview && (

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CaretLeft, CaretRight, Eye, Trash, X } from '@phosphor-icons/react'
+import { CaretLeft, CaretRight, Eye, SpinnerGap, Trash, X } from '@phosphor-icons/react'
 import Avatar from './Avatar'
+import Modal from './Modal'
 import { useChat } from '../store/chat'
 import { formatListTime } from '../lib/time'
+import type { StoryViewer as StoryViewerEntry } from '../lib/types'
 
 const STORY_MS = 5000
 
@@ -16,11 +18,14 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
   const stories = useChat((s) => s.stories)
   const markStorySeen = useChat((s) => s.markStorySeen)
   const deleteStory = useChat((s) => s.deleteStory)
+  const fetchStoryViewers = useChat((s) => s.fetchStoryViewers)
 
   const group = stories.find((g) => g.user.id === ownerId)
   const [index, setIndex] = useState(0)
   const [progress, setProgress] = useState(0)
   const [paused, setPaused] = useState(false)
+  const [viewersOpen, setViewersOpen] = useState(false)
+  const [viewers, setViewers] = useState<StoryViewerEntry[] | null>(null)
   const holdRef = useRef<{ x: number; startedAt: number; timer: ReturnType<typeof setTimeout> | null } | null>(null)
 
   const count = group?.stories.length ?? 0
@@ -42,7 +47,7 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
 
   // autoplay
   useEffect(() => {
-    if (paused || !story) return
+    if (paused || viewersOpen || !story) return
     const startedAt = Date.now() - progress
     const timer = setInterval(() => {
       const p = Date.now() - startedAt
@@ -50,7 +55,7 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
       if (p >= STORY_MS) goNext()
     }, 100)
     return () => clearInterval(timer)
-  }, [paused, story, index, goNext, progress])
+  }, [paused, story, index, goNext, progress, viewersOpen])
 
   // mark as seen whenever the active story changes (not for own stories)
   useEffect(() => {
@@ -103,7 +108,17 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
     else setPaused(true)
   }
 
-  // header/nav buttons must not feed the tap detector on the root overlay
+  const openViewers = async () => {
+    if (!story) return
+    setViewersOpen(true)
+    setViewers(null)
+    try {
+      setViewers(await fetchStoryViewers(story.id))
+    } catch {
+      setViewers([])
+    }
+  }
+
   const stopPointer = (e: React.SyntheticEvent) => e.stopPropagation()
 
   return (
@@ -138,9 +153,19 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
           <p className="text-xs text-white/60">{formatListTime(story.createdAt)}</p>
         </div>
         {isMine && (
-          <span className="flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium text-white">
+          <button
+            type="button"
+            aria-label="Who viewed this story"
+            onClick={(e) => {
+              e.stopPropagation()
+              void openViewers()
+            }}
+            onPointerDown={stopPointer}
+            onPointerUp={stopPointer}
+            className="flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium text-white transition hover:bg-white/25"
+          >
             <Eye size={14} /> {story.viewCount}
-          </span>
+          </button>
         )}
         {isMine && (
           <button
@@ -213,6 +238,34 @@ export default function StoryViewer({ ownerId, onClose }: StoryViewerProps) {
       >
         <CaretRight size={20} />
       </button>
+
+      {/* seen-by sheet */}
+      <div onPointerDown={stopPointer} onPointerUp={stopPointer}>
+        <Modal
+          open={viewersOpen}
+          onClose={() => setViewersOpen(false)}
+          title={`Seen by ${story.viewCount}`}
+          width="max-w-sm"
+        >
+          {viewers === null ? (
+            <div className="flex justify-center py-8">
+              <SpinnerGap size={22} className="animate-spin text-ink-3" />
+            </div>
+          ) : viewers.length === 0 ? (
+            <p className="py-6 text-center text-sm text-ink-3">No one has seen this story yet.</p>
+          ) : (
+            <ul className="flex max-h-[50dvh] flex-col gap-1 overflow-y-auto">
+              {viewers.map((v) => (
+                <li key={v.user.id} className="flex items-center gap-3 rounded-xl p-2">
+                  <Avatar name={v.user.fullName} color={v.user.avatarColor} src={v.user.avatarUrl} size={36} />
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">{v.user.fullName}</span>
+                  <span className="shrink-0 text-xs text-ink-3">{formatListTime(v.seenAt)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Modal>
+      </div>
     </div>
   )
 }

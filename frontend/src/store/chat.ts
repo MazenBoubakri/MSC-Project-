@@ -16,6 +16,7 @@ import type {
   SearchResult,
   Story,
   StoryGroup,
+  StoryViewer,
   UserProfile,
 } from '../lib/types'
 
@@ -122,6 +123,7 @@ interface ChatState {
   createStory: (mediaUrl: string, caption: string) => Promise<Story | null>
   deleteStory: (storyId: string) => Promise<void>
   markStorySeen: (storyId: string) => void
+  fetchStoryViewers: (storyId: string) => Promise<StoryViewer[]>
 
   pushToast: (t: Omit<Toast, 'id'>) => void
   dismissToast: (id: string) => void
@@ -762,6 +764,11 @@ export const useChat = create<ChatState>((set, get) => ({
         })),
       }))
     })
+  },
+
+  fetchStoryViewers: async (storyId) => {
+    const res = await api<{ viewers: StoryViewer[] }>(`/stories/${storyId}/viewers`)
+    return res.viewers
   },
 
   initSocket: () => {
